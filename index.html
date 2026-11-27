@@ -2,9 +2,17 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>お酒ノート | SAKĒ NOTE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>酒蔵棚 | SAKAGURA-DANA</title>
   <meta name="description" content="飲んだお酒の感想と、バイト先で覚えたお酒の知識を書きためるパーソナルノート。" />
+  <meta name="theme-color" content="#0d0f1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="酒蔵棚" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet" />
   <style>
@@ -34,7 +42,8 @@
     body {
       font-family: 'Noto Sans JP', 'Outfit', sans-serif;
       background: var(--bg-base); color: var(--text-primary);
-      min-height: 100vh; overflow-x: hidden;
+      min-height: 100vh; min-height: 100dvh; overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
     }
 
     /* BG ORBS */
@@ -43,10 +52,10 @@
     .bg-orb-2 { width:360px;height:360px;background:var(--rose);bottom:80px;right:-80px;opacity:.12; }
     .bg-orb-3 { width:280px;height:280px;background:var(--indigo);bottom:40%;left:40%;opacity:.10; }
 
-    .app-wrapper { position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:0 20px 80px; }
+    .app-wrapper { position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:0 20px calc(80px + env(safe-area-inset-bottom)); }
 
     /* HEADER */
-    header { text-align:center;padding:52px 0 36px; }
+    header { text-align:center;padding:calc(52px + env(safe-area-inset-top)) 0 36px; }
     .logo-mark {
       display:inline-flex;align-items:center;gap:10px;
       font-family:'Outfit',sans-serif;font-size:2.4rem;font-weight:700;letter-spacing:.08em;
@@ -366,9 +375,66 @@
     ::-webkit-scrollbar-track { background:transparent; }
     ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1);border-radius:999px; }
 
-    @media(max-width:600px) {
-      .form-row { grid-template-columns:1fr; }
-      .logo-mark { font-size:1.8rem; }
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .app-wrapper { padding-left: 16px; padding-right: 16px; }
+      header { padding-top: calc(40px + env(safe-area-inset-top)); padding-bottom: 28px; }
+    }
+
+    @media (max-width: 700px) {
+      .logo-mark { font-size: 2rem; }
+      .tab-bar { gap: 6px; padding: 5px; border-radius: var(--radius-lg); margin-bottom: 26px; }
+      .tab-btn { padding: 11px 10px; font-size: .86rem; border-radius: var(--radius-md); }
+      .toolbar { gap: 8px; }
+      .search-box { flex: 1 1 100%; min-width: 0; }
+      select.filter-select { flex: 1 1 0; min-width: 0; }
+      .btn-add { flex: 0 0 auto; }
+      .stat-bar { gap: 14px; padding: 14px 16px; justify-content: space-around; }
+      .stat-item { flex: 1; }
+      .shelf-bottles { padding: 24px 16px 0; gap: 10px; min-height: 200px; }
+      .bottle-container { width: 60px; height: 162px; }
+      .modal { padding: 26px; }
+    }
+
+    @media (max-width: 480px) {
+      .app-wrapper { padding-left: 12px; padding-right: 12px; }
+      header { padding-top: calc(28px + env(safe-area-inset-top)); padding-bottom: 22px; }
+      .logo-mark { font-size: 1.55rem; gap: 8px; }
+      .logo-icon { font-size: 1.6rem; }
+      header p { margin-top: 8px; font-size: .82rem; }
+      .tab-btn { font-size: .78rem; gap: 5px; padding: 10px 6px; }
+      .stat-bar { gap: 8px; padding: 12px 10px; }
+      .stat-num { font-size: 1.25rem; }
+      .stat-label { font-size: .68rem; }
+      .shelf-bottles { padding: 20px 12px 0; gap: 8px; min-height: 176px; }
+      .bottle-container { width: 52px; height: 140px; }
+      .b-name { font-size: .5rem; }
+      .b-type-label { font-size: .44rem; }
+      .b-shadow { width: 44px; }
+      .b-actions { opacity: 1; transform: none; }
+      .b-actions button { width: 26px; height: 26px; }
+      .form-row { grid-template-columns: 1fr; }
+      .modal-overlay { padding: 0; align-items: flex-end; }
+      .modal {
+        max-width: 100%; max-height: 92vh; max-height: 92dvh;
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        padding: 22px 18px calc(22px + env(safe-area-inset-bottom));
+      }
+      .modal-footer {
+        position: sticky; bottom: 0; margin-top: 20px;
+        padding-top: 14px; background: var(--bg-surface);
+      }
+      .modal-footer .btn-cancel, .modal-footer .btn-save { flex: 1; }
+      .toast {
+        width: calc(100% - 32px); white-space: normal; text-align: center;
+        bottom: calc(20px + env(safe-area-inset-bottom));
+      }
+    }
+
+    @media (hover: none) {
+      .bottle-slot:hover { transform: none; }
+      .bottle-slot:active { transform: translateY(-6px); }
+      .bottle-slot:hover .b-glass { filter: none; }
     }
   </style>
 </head>
@@ -379,7 +445,7 @@
 
   <div class="app-wrapper">
     <header>
-      <div class="logo-mark"><span class="logo-icon">🍶</span>SAKĒ NOTE</div>
+      <div class="logo-mark"><span class="logo-icon">🍶</span>酒蔵棚</div>
       <p>飲んだお酒の記録 &amp; バイト先で覚えたお酒の知識をためよう</p>
     </header>
 
@@ -633,8 +699,9 @@
 
     function computePerRow(containerEl) {
       const w = (containerEl ? containerEl.offsetWidth : window.innerWidth - 40) || 600;
-      const slotW = 82; // 68px bottle + 14px gap
-      const pad = 56;   // 28px × 2
+      const vw = window.innerWidth;
+      const slotW = vw <= 480 ? 60 : vw <= 700 ? 70 : 82;
+      const pad = vw <= 480 ? 24 : vw <= 700 ? 32 : 56;
       return Math.max(2, Math.min(10, Math.floor((w - pad) / slotW)));
     }
 
@@ -861,6 +928,17 @@
     /* ===== INIT ===== */
     renderDiary(); renderDiaryStats();
     renderMemo();  renderMemoStats();
+
+    const shortcutAction = new URLSearchParams(location.search).get('action');
+    if (shortcutAction === 'diary') openDiaryModal();
+    else if (shortcutAction === 'memo') { switchTab('memo'); openMemoModal(); }
+
+    /* ===== PWA ===== */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
   </script>
 </body>
 </html>
