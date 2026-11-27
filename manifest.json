@@ -35,13 +35,13 @@
   "shortcuts": [
     {
       "name": "飲んだお酒を記録",
-      "short_name": "日記",
+      "short_name": "お酒日記",
       "url": "./index.html?action=diary",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "お酒知識メモ",
-      "short_name": "メモ",
+      "short_name": "知識メモ",
       "url": "./index.html?action=memo",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
