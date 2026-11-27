@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>お酒ノート | SAKĒ NOTE</title>
+  <meta name="description" content="飲んだお酒の感想と、バイト先で覚えたお酒の知識を書きためるパーソナルノート。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== TOKENS ===== */
+    :root {
+      --bg-base:    #0d0f1a;
+      --bg-surface: #131626;
+      --bg-card:    rgba(255,255,255,0.045);
+      --border:     rgba(255,255,255,0.08);
+      --border-active: rgba(200,160,80,0.5);
+      --amber:    #d4a843; --amber-lt: #f0c96a; --amber-dk: #9a7520;
+      --rose:     #c96068; --rose-lt:  #e8818a;
+      --teal:     #3fa88c; --teal-lt:  #60c9aa;
+      --indigo:   #6478e0; --indigo-lt:#8c9ef5;
+      --text-primary:   #f0ece0;
+      --text-secondary: #9e9a8e;
+      --text-muted:     #5a5750;
+      --radius-sm: 8px; --radius-md: 14px; --radius-lg: 20px; --radius-xl: 28px;
+      --transition: 0.22s cubic-bezier(0.4,0,0.2,1);
+      --wood-dark:  #120a03;
+      --wood-mid:   #2a1206;
+      --wood-plank: #5a3010;
+      --wood-top:   #8a4f18;
+      --wood-shine: #b06824;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans JP', 'Outfit', sans-serif;
+      background: var(--bg-base); color: var(--text-primary);
+      min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* BG ORBS */
+    .bg-orb { position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;opacity:.18; }
+    .bg-orb-1 { width:480px;height:480px;background:var(--amber-dk);top:-100px;left:-100px; }
+    .bg-orb-2 { width:360px;height:360px;background:var(--rose);bottom:80px;right:-80px;opacity:.12; }
+    .bg-orb-3 { width:280px;height:280px;background:var(--indigo);bottom:40%;left:40%;opacity:.10; }
+
+    .app-wrapper { position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:0 20px 80px; }
+
+    /* HEADER */
+    header { text-align:center;padding:52px 0 36px; }
+    .logo-mark {
+      display:inline-flex;align-items:center;gap:10px;
+      font-family:'Outfit',sans-serif;font-size:2.4rem;font-weight:700;letter-spacing:.08em;
+      background:linear-gradient(135deg,var(--amber-lt),var(--amber) 50%,var(--rose-lt));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    }
+    .logo-icon { font-size:2.2rem;-webkit-text-fill-color:initial; }
+    header p { margin-top:10px;color:var(--text-secondary);font-size:.95rem;font-weight:300;letter-spacing:.04em; }
+
+    /* TABS */
+    .tab-bar {
+      display:flex;gap:8px;background:var(--bg-surface);border:1px solid var(--border);
+      border-radius:var(--radius-xl);padding:6px;margin-bottom:36px;
+    }
+    .tab-btn {
+      flex:1;cursor:pointer;padding:12px 20px;border:none;border-radius:var(--radius-lg);
+      font-family:inherit;font-size:.95rem;font-weight:500;color:var(--text-secondary);
+      background:transparent;transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .tab-btn:hover { color:var(--text-primary);background:var(--bg-card); }
+    .tab-btn.active { color:#1a1200;background:linear-gradient(135deg,var(--amber-lt),var(--amber));box-shadow:0 4px 20px rgba(212,168,67,.35); }
+    .tab-btn.active.memo-tab { background:linear-gradient(135deg,var(--teal-lt),var(--teal));box-shadow:0 4px 20px rgba(63,168,140,.35);color:#001a14; }
+
+    /* PANELS */
+    .panel { display:none; } .panel.active { display:block; }
+
+    /* TOOLBAR */
+    .toolbar { display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;align-items:center; }
+    .search-box {
+      flex:1;min-width:200px;display:flex;align-items:center;gap:10px;
+      background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 16px;
+    }
+    .search-box input { flex:1;border:none;background:transparent;color:var(--text-primary);font-family:inherit;font-size:.95rem;outline:none; }
+    .search-box input::placeholder { color:var(--text-muted); }
+    select.filter-select {
+      padding:10px 14px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-md);
+      color:var(--text-secondary);font-family:inherit;font-size:.9rem;cursor:pointer;outline:none;transition:var(--transition);
+    }
+    select.filter-select:focus { border-color:var(--border-active);color:var(--text-primary); }
+    .btn-add {
+      padding:10px 22px;border:none;border-radius:var(--radius-md);font-family:inherit;font-size:.95rem;font-weight:600;
+      cursor:pointer;transition:var(--transition);display:flex;align-items:center;gap:7px;white-space:nowrap;
+    }
+    .btn-add.diary-add { background:linear-gradient(135deg,var(--amber-lt),var(--amber));color:#1a1200;box-shadow:0 4px 16px rgba(212,168,67,.3); }
+    .btn-add.diary-add:hover { transform:translateY(-2px);box-shadow:0 6px 24px rgba(212,168,67,.45); }
+    .btn-add.memo-add  { background:linear-gradient(135deg,var(--teal-lt),var(--teal));color:#001a14;box-shadow:0 4px 16px rgba(63,168,140,.3); }
+    .btn-add.memo-add:hover  { transform:translateY(-2px);box-shadow:0 6px 24px rgba(63,168,140,.45); }
+
+    /* STAT BAR */
+    .stat-bar {
+      display:flex;gap:20px;flex-wrap:wrap;margin-bottom:24px;
+      padding:16px 22px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+    }
+    .stat-item { text-align:center; }
+    .stat-num { font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:700;color:var(--amber-lt); }
+    .stat-label { font-size:.75rem;color:var(--text-muted);margin-top:2px; }
+
+    /* ===== SHELF CABINET ===== */
+    .shelf-cabinet {
+      background: linear-gradient(165deg, #1c0e04 0%, #0e0702 60%, #180d04 100%);
+      border: 2px solid var(--wood-plank);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow:
+        0 24px 70px rgba(0,0,0,.8),
+        inset 0 1px 0 rgba(255,255,255,.04),
+        inset 3px 0 15px rgba(0,0,0,.4),
+        inset -3px 0 15px rgba(0,0,0,.4);
+      position: relative;
+    }
+    /* vertical wood grain */
+    .shelf-cabinet::before {
+      content:'';position:absolute;inset:0;pointer-events:none;
+      background: repeating-linear-gradient(
+        91deg,
+        transparent 0px, transparent 55px,
+        rgba(255,255,255,.013) 55px, rgba(255,255,255,.013) 56px
+      );
+    }
+
+    .shelf-row { position:relative; }
+    .shelf-bottles {
+      display:flex;
+      align-items:flex-end;
+      gap:14px;
+      padding:30px 28px 0;
+      flex-wrap:nowrap;
+      min-height:224px;
+    }
+
+    /* Shelf plank */
+    .shelf-plank {
+      height:22px;
+      background: linear-gradient(to bottom,
+        var(--wood-shine) 0%,
+        var(--wood-top) 15%,
+        var(--wood-plank) 55%,
+        #2e1506 100%
+      );
+      box-shadow:
+        0 8px 24px rgba(0,0,0,.7),
+        0 2px 4px rgba(0,0,0,.5),
+        inset 0 1px 0 rgba(255,255,255,.14),
+        inset 0 -1px 0 rgba(0,0,0,.3);
+      position: relative;
+    }
+    /* grain lines on plank */
+    .shelf-plank::before {
+      content:'';position:absolute;inset:3px 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px, transparent 70px,
+        rgba(0,0,0,.1) 70px, rgba(0,0,0,.1) 72px,
+        transparent 72px, transparent 140px,
+        rgba(255,255,255,.04) 140px, rgba(255,255,255,.04) 141px
+      );
+    }
+    /* shadow cast below shelf */
+    .shelf-plank::after {
+      content:'';position:absolute;top:100%;left:0;right:0;
+      height:16px;
+      background:linear-gradient(to bottom,rgba(0,0,0,.55),transparent);
+    }
+
+    .cabinet-bottom { height:18px;background:linear-gradient(to bottom,#1a0a03,#0e0702); }
+
+    /* ===== BOTTLE ===== */
+    .bottle-slot {
+      display:flex;flex-direction:column;align-items:center;
+      cursor:pointer;
+      transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+      position:relative;flex-shrink:0;
+    }
+    .bottle-slot:hover { transform:translateY(-14px); }
+    .bottle-slot:hover .b-actions { opacity:1;transform:translateY(0); }
+    .bottle-slot:hover .b-shadow  { opacity:.45;transform:scaleX(.75); }
+    .bottle-slot:hover .b-glass   { filter:brightness(1.12); }
+
+    .bottle-container {
+      position:relative;width:68px;height:184px;flex-shrink:0;
+    }
+
+    /* Glass shape */
+    .b-glass {
+      position:absolute;inset:0;
+      clip-path: polygon(
+        37% 0%, 63% 0%,
+        63% 22%, 92% 40%,
+        92% 90%, 86% 100%,
+        14% 100%, 8% 90%,
+        8% 40%, 37% 22%
+      );
+      transition: filter .25s;
+    }
+    /* Glass highlight overlay */
+    .b-glass::before {
+      content:'';position:absolute;inset:0;
+      background: linear-gradient(
+        155deg,
+        rgba(255,255,255,.42) 0%,
+        rgba(255,255,255,.10) 16%,
+        transparent 32%,
+        transparent 68%,
+        rgba(0,0,0,.28) 100%
+      );
+    }
+    /* Thin shine stripe */
+    .b-glass::after {
+      content:'';position:absolute;
+      left:12%;top:8%;width:5%;height:52%;
+      background:rgba(255,255,255,.22);
+      border-radius:999px;
+    }
+
+    /* Foil / cap */
+    .b-cap {
+      position:absolute;top:0;
+      left:36%;width:28%;height:7%;
+      border-radius:3px 3px 0 0;
+    }
+
+    /* Paper label */
+    .b-label {
+      position:absolute;
+      left:10%;top:41%;
+      width:80%;height:41%;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+      background:rgba(243,233,212,.96);
+      border-radius:2px;
+      padding:5px 4px;
+      box-shadow:0 1px 5px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.09);
+      overflow:hidden;
+    }
+    /* Inner border decoration */
+    .b-label::before {
+      content:'';position:absolute;top:3px;left:3px;right:3px;bottom:3px;
+      border:.6px solid rgba(100,65,15,.22);border-radius:1px;pointer-events:none;
+    }
+
+    .b-stars { display:flex;gap:1px;flex-shrink:0; }
+    .b-stars span { font-size:7.5px;line-height:1; }
+
+    .b-name {
+      font-size:.6rem;font-weight:700;
+      color:#281200;text-align:center;
+      word-break:break-word;
+      overflow:hidden;display:-webkit-box;
+      -webkit-line-clamp:4;-webkit-box-orient:vertical;
+      line-height:1.3;padding:0 3px;width:100%;
+    }
+
+    .b-type-label {
+      font-size:.5rem;color:#7a4e18;font-weight:500;
+      text-align:center;opacity:.8;flex-shrink:0;
+    }
+
+    /* Shadow blob on shelf */
+    .b-shadow {
+      width:58px;height:7px;
+      background:radial-gradient(ellipse,rgba(0,0,0,.7) 0%,transparent 72%);
+      border-radius:50%;
+      transition:var(--transition);
+      flex-shrink:0;margin-top:-3px;
+    }
+
+    /* Action buttons */
+    .b-actions {
+      display:flex;gap:5px;margin-top:4px;
+      opacity:0;transform:translateY(5px);transition:.22s ease;
+    }
+    .b-actions button {
+      width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;
+      font-size:.75rem;display:flex;align-items:center;justify-content:center;
+      background:rgba(255,255,255,.1);color:var(--text-secondary);transition:.15s;
+    }
+    .b-actions button:hover { background:rgba(255,255,255,.2); }
+    .b-actions button.del:hover { background:rgba(201,96,104,.3); }
+
+    /* Empty state */
+    .empty-state { text-align:center;padding:80px 20px;color:var(--text-muted); }
+    .empty-state .ei { font-size:3.5rem;margin-bottom:16px;opacity:.5; }
+    .empty-state p { font-size:.95rem; }
+
+    /* ===== MODALS ===== */
+    .modal-overlay {
+      position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);
+      display:flex;align-items:center;justify-content:center;padding:20px;
+      opacity:0;pointer-events:none;transition:var(--transition);
+    }
+    .modal-overlay.open { opacity:1;pointer-events:all; }
+    .modal {
+      background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-xl);
+      padding:32px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;
+      transform:scale(.93) translateY(20px);transition:var(--transition);
+    }
+    .modal-overlay.open .modal { transform:scale(1) translateY(0); }
+    .modal-title { font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:24px;display:flex;align-items:center;gap:10px; }
+    .form-group { margin-bottom:18px; }
+    label { display:block;font-size:.85rem;color:var(--text-secondary);margin-bottom:7px;letter-spacing:.03em; }
+    input[type=text],input[type=date],textarea,select.form-select {
+      width:100%;padding:11px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);
+      border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:.95rem;outline:none;transition:var(--transition);
+    }
+    input[type=text]:focus,input[type=date]:focus,textarea:focus,select.form-select:focus {
+      border-color:var(--border-active);background:rgba(212,168,67,.06);
+    }
+    input[type=date] { color-scheme:dark; }
+    textarea { resize:vertical;min-height:90px;line-height:1.6; }
+    .star-input { display:flex;gap:6px; }
+    .star-input span { font-size:1.6rem;cursor:pointer;color:var(--text-muted);transition:color .15s; }
+    .star-input span.lit { color:var(--amber); }
+    .star-input span:hover { transform:scale(1.15); }
+    .flavor-checks { display:flex;flex-wrap:wrap;gap:8px; }
+    .flavor-check-label {
+      display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;border:1px solid var(--border);
+      font-size:.82rem;cursor:pointer;transition:var(--transition);user-select:none;
+    }
+    .flavor-check-label:hover { border-color:var(--border-active); }
+    .flavor-check-label input { display:none; }
+    .flavor-check-label.checked { background:rgba(212,168,67,.15);border-color:rgba(212,168,67,.4);color:var(--amber-lt); }
+    .form-row { display:grid;grid-template-columns:1fr 1fr;gap:14px; }
+    .modal-footer { display:flex;justify-content:flex-end;gap:10px;margin-top:28px; }
+    .btn-cancel {
+      padding:10px 22px;border-radius:var(--radius-md);border:1px solid var(--border);background:transparent;
+      color:var(--text-secondary);font-family:inherit;font-size:.95rem;cursor:pointer;transition:var(--transition);
+    }
+    .btn-cancel:hover { background:rgba(255,255,255,.06);color:var(--text-primary); }
+    .btn-save { padding:10px 28px;border-radius:var(--radius-md);border:none;font-family:inherit;font-size:.95rem;font-weight:600;cursor:pointer;transition:var(--transition); }
+    .btn-save.diary-save { background:linear-gradient(135deg,var(--amber-lt),var(--amber));color:#1a1200; }
+    .btn-save.memo-save  { background:linear-gradient(135deg,var(--teal-lt),var(--teal));color:#001a14; }
+    .btn-save:hover { transform:translateY(-1px);filter:brightness(1.08); }
+
+    /* Detail modal */
+    .tag { padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:500;letter-spacing:.03em; }
+    .tag-type { background:rgba(212,168,67,.15);color:var(--amber-lt);border:1px solid rgba(212,168,67,.25); }
+    .tag-cat  { background:rgba(63,168,140,.15);color:var(--teal-lt);border:1px solid rgba(63,168,140,.25); }
+    .tag-date { background:rgba(255,255,255,.05);color:var(--text-muted);border:1px solid var(--border); }
+    .tag-work { background:rgba(100,120,224,.15);color:var(--indigo-lt);border:1px solid rgba(100,120,224,.25); }
+    .detail-meta { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px; }
+    .detail-stars { margin-bottom:12px;font-size:1.1rem;color:var(--amber);letter-spacing:2px; }
+    .detail-stars .empty { color:var(--text-muted); }
+    .detail-flavors { display:flex;flex-wrap:wrap;gap:7px;margin:12px 0; }
+    .detail-note { font-size:.95rem;line-height:1.75;color:var(--text-secondary);white-space:pre-wrap; }
+    .detail-divider { height:1px;background:var(--border);margin:18px 0; }
+    .flavor-chip { padding:3px 10px;border-radius:999px;font-size:.75rem;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text-secondary); }
+
+    /* Toast */
+    .toast {
+      position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);
+      background:rgba(30,34,56,.95);border:1px solid var(--border);border-radius:var(--radius-md);
+      padding:12px 24px;font-size:.9rem;color:var(--text-primary);
+      opacity:0;pointer-events:none;transition:.3s ease;z-index:999;white-space:nowrap;
+    }
+    .toast.show { opacity:1;transform:translateX(-50%) translateY(0); }
+
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1);border-radius:999px; }
+
+    @media(max-width:600px) {
+      .form-row { grid-template-columns:1fr; }
+      .logo-mark { font-size:1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="bg-orb bg-orb-3"></div>
+
+  <div class="app-wrapper">
+    <header>
+      <div class="logo-mark"><span class="logo-icon">🍶</span>SAKĒ NOTE</div>
+      <p>飲んだお酒の記録 &amp; バイト先で覚えたお酒の知識をためよう</p>
+    </header>
+
+    <div class="tab-bar" role="tablist">
+      <button class="tab-btn active" id="tab-diary" role="tab" onclick="switchTab('diary')">🥃 飲んだお酒日記</button>
+      <button class="tab-btn memo-tab" id="tab-memo" role="tab" onclick="switchTab('memo')">📚 お酒知識メモ</button>
+    </div>
+
+    <!-- DIARY PANEL -->
+    <div class="panel active" id="panel-diary">
+      <div class="stat-bar" id="diary-stats"></div>
+      <div class="toolbar">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" id="diary-search" placeholder="お酒の名前で検索…" oninput="renderDiary()" />
+        </div>
+        <select class="filter-select" id="diary-filter-type" onchange="renderDiary()">
+          <option value="">すべての種類</option>
+          <option>🍶 日本酒</option><option>🍷 ワイン</option><option>🍺 ビール</option>
+          <option>🥃 ウイスキー</option><option>🍸 カクテル</option><option>🫧 スパークリング</option>
+          <option>🍹 チューハイ</option><option>🫗 焼酎</option><option>🍾 シャンパン</option><option>🧉 その他</option>
+        </select>
+        <button class="btn-add diary-add" onclick="openDiaryModal()">＋ 追加する</button>
+      </div>
+      <div id="diary-shelf"></div>
+    </div>
+
+    <!-- MEMO PANEL -->
+    <div class="panel" id="panel-memo">
+      <div class="stat-bar" id="memo-stats"></div>
+      <div class="toolbar">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" id="memo-search" placeholder="お酒の名前・説明で検索…" oninput="renderMemo()" />
+        </div>
+        <select class="filter-select" id="memo-filter-cat" onchange="renderMemo()">
+          <option value="">すべてのカテゴリ</option>
+          <option>🍶 日本酒</option><option>🍷 ワイン</option><option>🍺 ビール</option>
+          <option>🥃 ウイスキー</option><option>🍸 カクテル</option><option>🫧 スパークリング</option>
+          <option>🍹 チューハイ</option><option>🫗 焼酎</option><option>🍾 シャンパン</option>
+          <option>🧉 リキュール</option><option>🧉 その他</option>
+        </select>
+        <button class="btn-add memo-add" onclick="openMemoModal()">＋ 追加する</button>
+      </div>
+      <div id="memo-shelf"></div>
+    </div>
+  </div>
+
+  <!-- DIARY MODAL -->
+  <div class="modal-overlay" id="diary-modal-overlay" onclick="closeOnBg(event,'diary-modal-overlay')">
+    <div class="modal">
+      <div class="modal-title">🥃 <span id="dm-title">お酒の感想を記録</span></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dm-name">お酒の名前 *</label>
+          <input type="text" id="dm-name" placeholder="例: 獺祭 純米大吟醸" />
+        </div>
+        <div class="form-group">
+          <label for="dm-date">飲んだ日</label>
+          <input type="date" id="dm-date" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dm-type">種類</label>
+          <select class="form-select" id="dm-type">
+            <option>🍶 日本酒</option><option>🍷 ワイン</option><option>🍺 ビール</option>
+            <option>🥃 ウイスキー</option><option>🍸 カクテル</option><option>🫧 スパークリング</option>
+            <option>🍹 チューハイ</option><option>🫗 焼酎</option><option>🍾 シャンパン</option><option>🧉 その他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="dm-where">飲んだ場所</label>
+          <input type="text" id="dm-where" placeholder="例: 居酒屋・自宅" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>評価</label>
+        <div class="star-input" id="dm-stars">
+          <span onclick="setStars(1)">★</span><span onclick="setStars(2)">★</span>
+          <span onclick="setStars(3)">★</span><span onclick="setStars(4)">★</span><span onclick="setStars(5)">★</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>味の特徴（複数選択可）</label>
+        <div class="flavor-checks" id="dm-flavors">
+          <label class="flavor-check-label"><input type="checkbox" value="甘口" onchange="toggleFlavor(this)">甘口</label>
+          <label class="flavor-check-label"><input type="checkbox" value="辛口" onchange="toggleFlavor(this)">辛口</label>
+          <label class="flavor-check-label"><input type="checkbox" value="フルーティ" onchange="toggleFlavor(this)">フルーティ</label>
+          <label class="flavor-check-label"><input type="checkbox" value="すっきり" onchange="toggleFlavor(this)">すっきり</label>
+          <label class="flavor-check-label"><input type="checkbox" value="まろやか" onchange="toggleFlavor(this)">まろやか</label>
+          <label class="flavor-check-label"><input type="checkbox" value="濃厚" onchange="toggleFlavor(this)">濃厚</label>
+          <label class="flavor-check-label"><input type="checkbox" value="酸味あり" onchange="toggleFlavor(this)">酸味あり</label>
+          <label class="flavor-check-label"><input type="checkbox" value="苦味あり" onchange="toggleFlavor(this)">苦味あり</label>
+          <label class="flavor-check-label"><input type="checkbox" value="スモーキー" onchange="toggleFlavor(this)">スモーキー</label>
+          <label class="flavor-check-label"><input type="checkbox" value="ハーブ系" onchange="toggleFlavor(this)">ハーブ系</label>
+          <label class="flavor-check-label"><input type="checkbox" value="コク深い" onchange="toggleFlavor(this)">コク深い</label>
+          <label class="flavor-check-label"><input type="checkbox" value="さっぱり" onchange="toggleFlavor(this)">さっぱり</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="dm-note">感想・メモ</label>
+        <textarea id="dm-note" placeholder="飲んだときの感想、合う料理、次また飲みたいか…など自由に書いてね"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeDiaryModal()">キャンセル</button>
+        <button class="btn-save diary-save" onclick="saveDiary()">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMO MODAL -->
+  <div class="modal-overlay" id="memo-modal-overlay" onclick="closeOnBg(event,'memo-modal-overlay')">
+    <div class="modal">
+      <div class="modal-title">📚 <span id="mm-title">お酒の知識を記録</span></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="mm-name">お酒の名前 *</label>
+          <input type="text" id="mm-name" placeholder="例: ヱビスビール" />
+        </div>
+        <div class="form-group">
+          <label for="mm-cat">カテゴリ</label>
+          <select class="form-select" id="mm-cat">
+            <option>🍶 日本酒</option><option>🍷 ワイン</option><option>🍺 ビール</option>
+            <option>🥃 ウイスキー</option><option>🍸 カクテル</option><option>🫧 スパークリング</option>
+            <option>🍹 チューハイ</option><option>🫗 焼酎</option><option>🍾 シャンパン</option>
+            <option>🧉 リキュール</option><option>🧉 その他</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="mm-origin">産地・製造元</label>
+          <input type="text" id="mm-origin" placeholder="例: 山口県 旭酒造" />
+        </div>
+        <div class="form-group">
+          <label for="mm-abv">アルコール度数</label>
+          <input type="text" id="mm-abv" placeholder="例: 16%" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="mm-desc">説明・特徴</label>
+        <textarea id="mm-desc" rows="3" placeholder="どんなお酒か、味の特徴、製法など…"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="mm-pairing">合う料理・シチュエーション</label>
+        <input type="text" id="mm-pairing" placeholder="例: 刺身・和食全般" />
+      </div>
+      <div class="form-group">
+        <label for="mm-tags">タグ（カンマ区切り）</label>
+        <input type="text" id="mm-tags" placeholder="例: 辛口, 有名銘柄, おすすめ" />
+      </div>
+      <div class="form-group">
+        <label for="mm-note">バイトメモ・接客ポイント</label>
+        <textarea id="mm-note" placeholder="お客さんへの説明ポイント、よく聞かれること、先輩からのアドバイスなど…"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeMemoModal()">キャンセル</button>
+        <button class="btn-save memo-save" onclick="saveMemo()">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <div class="modal-overlay" id="detail-overlay" onclick="closeOnBg(event,'detail-overlay')">
+    <div class="modal">
+      <div id="detail-content"></div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeDetail()">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /* ===== DATA ===== */
+    let diary = JSON.parse(localStorage.getItem('sake_diary') || '[]');
+    let memos = JSON.parse(localStorage.getItem('sake_memos') || '[]');
+    let diaryStarVal = 3;
+    let editDiaryId  = null;
+    let editMemoId   = null;
+
+    function save() {
+      localStorage.setItem('sake_diary', JSON.stringify(diary));
+      localStorage.setItem('sake_memos', JSON.stringify(memos));
+    }
+    function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+    /* ===== UI HELPERS ===== */
+    function switchTab(tab) {
+      ['diary','memo'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+        document.getElementById('panel-' + t).classList.toggle('active', t === tab);
+      });
+    }
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+    function setStars(n) {
+      diaryStarVal = n;
+      document.querySelectorAll('#dm-stars span').forEach((s, i) => s.classList.toggle('lit', i < n));
+    }
+    function initStars(val) {
+      diaryStarVal = val;
+      document.querySelectorAll('#dm-stars span').forEach((s, i) => s.classList.toggle('lit', i < val));
+    }
+    function starsHTML(n) {
+      let h = '';
+      for (let i = 1; i <= 5; i++) h += `<span${i <= n ? '' : ' class="empty"'}>★</span>`;
+      return h;
+    }
+    function miniStarsHTML(n) {
+      let h = '';
+      for (let i = 1; i <= 5; i++)
+        h += `<span style="color:${i <= n ? '#c8a000' : '#bbb'}">${i <= n ? '★' : '☆'}</span>`;
+      return h;
+    }
+    function toggleFlavor(cb) { cb.closest('label').classList.toggle('checked', cb.checked); }
+    function setFlavors(arr) {
+      document.querySelectorAll('#dm-flavors input').forEach(cb => {
+        const on = arr.includes(cb.value);
+        cb.checked = on; cb.closest('label').classList.toggle('checked', on);
+      });
+    }
+    function getFlavors() {
+      return [...document.querySelectorAll('#dm-flavors input:checked')].map(c => c.value);
+    }
+
+    /* ===== BOTTLE RENDERING ===== */
+    const BOTTLE_STYLES = {
+      '日本酒':     { bg:'rgba(188,132,52,0.84)',  cap:'linear-gradient(to right,#606060,#b8b8b8,#606060)' },
+      'ワイン':     { bg:'rgba(36,86,46,0.90)',     cap:'linear-gradient(to right,#c0a000,#f0d040,#c0a000)' },
+      'ビール':     { bg:'rgba(208,152,18,0.82)',   cap:'linear-gradient(to right,#787878,#c0c0c0,#787878)' },
+      'ウイスキー': { bg:'rgba(132,65,14,0.92)',    cap:'linear-gradient(to right,#780018,#c00028,#780018)' },
+      'カクテル':   { bg:'rgba(58,100,178,0.68)',   cap:'linear-gradient(to right,#3858a0,#7888cc,#3858a0)' },
+      'スパークリング':{ bg:'rgba(50,115,62,0.82)', cap:'linear-gradient(to right,#c0a000,#f8e030,#c0a000)' },
+      'チューハイ': { bg:'rgba(130,80,162,0.74)',   cap:'linear-gradient(to right,#583898,#8858c8,#583898)' },
+      '焼酎':       { bg:'rgba(192,185,172,0.44)',  cap:'linear-gradient(to right,#888888,#cccccc,#888888)' },
+      'シャンパン': { bg:'rgba(66,110,50,0.86)',    cap:'linear-gradient(to right,#c0a000,#f0d040,#c0a000)' },
+      'リキュール': { bg:'rgba(162,52,90,0.80)',    cap:'linear-gradient(to right,#780048,#c05898,#780048)' },
+    };
+    function bottleStyle(type) {
+      for (const [k, v] of Object.entries(BOTTLE_STYLES)) {
+        if (type.includes(k)) return v;
+      }
+      return { bg:'rgba(85,85,105,0.74)', cap:'linear-gradient(to right,#606060,#9a9a9a,#606060)' };
+    }
+
+    function computePerRow(containerEl) {
+      const w = (containerEl ? containerEl.offsetWidth : window.innerWidth - 40) || 600;
+      const slotW = 82; // 68px bottle + 14px gap
+      const pad = 56;   // 28px × 2
+      return Math.max(2, Math.min(10, Math.floor((w - pad) / slotW)));
+    }
+
+    function bottleHTML(item, entryType) {
+      const type = item.type || item.cat || '';
+      const st   = bottleStyle(type);
+      const shortType = type.replace(/^.\S* /, '');
+      const stars = entryType === 'diary'
+        ? `<div class="b-stars">${miniStarsHTML(item.rating || 3)}</div>` : '';
+      const editFn   = entryType === 'diary' ? `openDiaryModal('${item.id}')` : `openMemoModal('${item.id}')`;
+      const delFn    = entryType === 'diary' ? `deleteDiary('${item.id}')` : `deleteMemo('${item.id}')`;
+      const detailFn = entryType === 'diary' ? `showDiaryDetail('${item.id}')` : `showMemoDetail('${item.id}')`;
+      return `
+        <div class="bottle-slot" onclick="${detailFn}" title="${item.name}">
+          <div class="bottle-container">
+            <div class="b-glass" style="background:${st.bg}"></div>
+            <div class="b-cap"   style="background:${st.cap}"></div>
+            <div class="b-label">
+              ${stars}
+              <div class="b-name">${item.name}</div>
+              <div class="b-type-label">${shortType}</div>
+            </div>
+          </div>
+          <div class="b-shadow"></div>
+          <div class="b-actions" onclick="event.stopPropagation()">
+            <button onclick="${editFn}" title="編集">✏️</button>
+            <button class="del" onclick="${delFn}" title="削除">🗑</button>
+          </div>
+        </div>`;
+    }
+
+    function renderShelf(items, containerId, entryType) {
+      const container = document.getElementById(containerId);
+      if (!items.length) {
+        const isEmpty = entryType === 'diary' ? diary.length === 0 : memos.length === 0;
+        const icon    = entryType === 'diary' ? '🍶' : '📚';
+        const msg     = isEmpty
+          ? '「追加する」から始めよう！'
+          : '検索結果なし';
+        container.innerHTML = `<div class="empty-state"><div class="ei">${icon}</div><p>まだ記録がありません。${msg}</p></div>`;
+        return;
+      }
+      const perRow = computePerRow(container);
+      let html = '<div class="shelf-cabinet">';
+      for (let i = 0; i < items.length; i += perRow) {
+        const row = items.slice(i, i + perRow);
+        html += `<div class="shelf-row"><div class="shelf-bottles">${row.map(it => bottleHTML(it, entryType)).join('')}</div><div class="shelf-plank"></div></div>`;
+      }
+      html += '<div class="cabinet-bottom"></div></div>';
+      container.innerHTML = html;
+    }
+
+    /* ===== DIARY ===== */
+    function openDiaryModal(id = null) {
+      editDiaryId = id;
+      const d = id ? diary.find(x => x.id === id) : null;
+      document.getElementById('dm-title').textContent = id ? 'お酒の感想を編集' : 'お酒の感想を記録';
+      document.getElementById('dm-name').value  = d?.name  || '';
+      document.getElementById('dm-date').value  = d?.date  || new Date().toISOString().slice(0, 10);
+      document.getElementById('dm-type').value  = d?.type  || '🍶 日本酒';
+      document.getElementById('dm-where').value = d?.where || '';
+      document.getElementById('dm-note').value  = d?.note  || '';
+      initStars(d?.rating || 3);
+      setFlavors(d?.flavors || []);
+      document.getElementById('diary-modal-overlay').classList.add('open');
+    }
+    function closeDiaryModal() {
+      document.getElementById('diary-modal-overlay').classList.remove('open');
+      editDiaryId = null;
+    }
+    function saveDiary() {
+      const name = document.getElementById('dm-name').value.trim();
+      if (!name) { showToast('⚠️ お酒の名前を入力してください'); return; }
+      const entry = {
+        id: editDiaryId || uid(), name,
+        date:    document.getElementById('dm-date').value,
+        type:    document.getElementById('dm-type').value,
+        where:   document.getElementById('dm-where').value.trim(),
+        rating:  diaryStarVal,
+        flavors: getFlavors(),
+        note:    document.getElementById('dm-note').value.trim(),
+        created: Date.now()
+      };
+      if (editDiaryId) diary[diary.findIndex(x => x.id === editDiaryId)] = entry;
+      else diary.unshift(entry);
+      save(); closeDiaryModal(); renderDiary(); renderDiaryStats();
+      showToast(editDiaryId ? '✏️ 更新しました' : '🍶 記録しました！');
+    }
+    function deleteDiary(id) {
+      if (!confirm('この記録を削除しますか？')) return;
+      diary = diary.filter(x => x.id !== id);
+      save(); renderDiary(); renderDiaryStats(); showToast('🗑️ 削除しました');
+    }
+    function renderDiary() {
+      const q  = document.getElementById('diary-search').value.toLowerCase();
+      const ft = document.getElementById('diary-filter-type').value;
+      const items = diary.filter(d =>
+        (!q  || d.name.toLowerCase().includes(q) || (d.note || '').toLowerCase().includes(q)) &&
+        (!ft || d.type === ft)
+      );
+      renderShelf(items, 'diary-shelf', 'diary');
+    }
+    function renderDiaryStats() {
+      const total = diary.length;
+      const avg   = total ? (diary.reduce((s, d) => s + d.rating, 0) / total).toFixed(1) : '—';
+      const types = [...new Set(diary.map(d => d.type))].length;
+      document.getElementById('diary-stats').innerHTML = `
+        <div class="stat-item"><div class="stat-num">${total}</div><div class="stat-label">記録数</div></div>
+        <div class="stat-item"><div class="stat-num">${avg}</div><div class="stat-label">平均評価 ★</div></div>
+        <div class="stat-item"><div class="stat-num">${types}</div><div class="stat-label">お酒の種類</div></div>`;
+    }
+    function showDiaryDetail(id) {
+      const d = diary.find(x => x.id === id);
+      if (!d) return;
+      document.getElementById('detail-content').innerHTML = `
+        <div class="modal-title">🥃 ${d.name}</div>
+        <div class="detail-meta">
+          <span class="tag tag-type">${d.type}</span>
+          ${d.date  ? `<span class="tag tag-date">📅 ${d.date}</span>` : ''}
+          ${d.where ? `<span class="tag tag-date">📍 ${d.where}</span>` : ''}
+        </div>
+        <div class="detail-stars">${starsHTML(d.rating)}</div>
+        ${d.flavors?.length ? `<div class="detail-flavors">${d.flavors.map(f => `<span class="flavor-chip">${f}</span>`).join('')}</div>` : ''}
+        ${d.note ? `<div class="detail-divider"></div><div class="detail-note">${d.note}</div>` : ''}`;
+      document.getElementById('detail-overlay').classList.add('open');
+    }
+
+    /* ===== MEMO ===== */
+    function openMemoModal(id = null) {
+      editMemoId = id;
+      const m = id ? memos.find(x => x.id === id) : null;
+      document.getElementById('mm-title').textContent = id ? 'お酒知識を編集' : 'お酒の知識を記録';
+      document.getElementById('mm-name').value    = m?.name    || '';
+      document.getElementById('mm-cat').value     = m?.cat     || '🍶 日本酒';
+      document.getElementById('mm-origin').value  = m?.origin  || '';
+      document.getElementById('mm-abv').value     = m?.abv     || '';
+      document.getElementById('mm-desc').value    = m?.desc    || '';
+      document.getElementById('mm-pairing').value = m?.pairing || '';
+      document.getElementById('mm-tags').value    = m?.tags?.join(', ') || '';
+      document.getElementById('mm-note').value    = m?.note    || '';
+      document.getElementById('memo-modal-overlay').classList.add('open');
+    }
+    function closeMemoModal() {
+      document.getElementById('memo-modal-overlay').classList.remove('open');
+      editMemoId = null;
+    }
+    function saveMemo() {
+      const name = document.getElementById('mm-name').value.trim();
+      if (!name) { showToast('⚠️ お酒の名前を入力してください'); return; }
+      const tags = document.getElementById('mm-tags').value.split(/[,、]/).map(t => t.trim()).filter(Boolean);
+      const entry = {
+        id: editMemoId || uid(), name,
+        cat:     document.getElementById('mm-cat').value,
+        origin:  document.getElementById('mm-origin').value.trim(),
+        abv:     document.getElementById('mm-abv').value.trim(),
+        desc:    document.getElementById('mm-desc').value.trim(),
+        pairing: document.getElementById('mm-pairing').value.trim(),
+        tags,
+        note:    document.getElementById('mm-note').value.trim(),
+        created: Date.now()
+      };
+      if (editMemoId) memos[memos.findIndex(x => x.id === editMemoId)] = entry;
+      else memos.unshift(entry);
+      save(); closeMemoModal(); renderMemo(); renderMemoStats();
+      showToast(editMemoId ? '✏️ 更新しました' : '📚 保存しました！');
+    }
+    function deleteMemo(id) {
+      if (!confirm('このメモを削除しますか？')) return;
+      memos = memos.filter(x => x.id !== id);
+      save(); renderMemo(); renderMemoStats(); showToast('🗑️ 削除しました');
+    }
+    function renderMemo() {
+      const q  = document.getElementById('memo-search').value.toLowerCase();
+      const fc = document.getElementById('memo-filter-cat').value;
+      const items = memos.filter(m =>
+        (!q  || m.name.toLowerCase().includes(q) || (m.desc || '').toLowerCase().includes(q) || (m.tags || []).some(t => t.toLowerCase().includes(q))) &&
+        (!fc || m.cat === fc)
+      );
+      renderShelf(items, 'memo-shelf', 'memo');
+    }
+    function renderMemoStats() {
+      const total = memos.length;
+      const cats  = [...new Set(memos.map(m => m.cat))].length;
+      document.getElementById('memo-stats').innerHTML = `
+        <div class="stat-item"><div class="stat-num">${total}</div><div class="stat-label">メモ数</div></div>
+        <div class="stat-item"><div class="stat-num">${cats}</div><div class="stat-label">カテゴリ数</div></div>`;
+    }
+    function showMemoDetail(id) {
+      const m = memos.find(x => x.id === id);
+      if (!m) return;
+      document.getElementById('detail-content').innerHTML = `
+        <div class="modal-title">📚 ${m.name}</div>
+        <div class="detail-meta">
+          <span class="tag tag-cat">${m.cat}</span>
+          ${m.origin ? `<span class="tag tag-date">📍 ${m.origin}</span>` : ''}
+          ${m.abv    ? `<span class="tag tag-work">🔢 ${m.abv}</span>`   : ''}
+        </div>
+        ${m.desc    ? `<div class="detail-divider"></div><div class="detail-note"><strong>説明・特徴</strong><br><br>${m.desc}</div>` : ''}
+        ${m.pairing ? `<div class="detail-divider"></div><p style="color:var(--text-secondary);font-size:.9rem">🍽️ <strong>合う料理：</strong>${m.pairing}</p>` : ''}
+        ${m.note    ? `<div class="detail-divider"></div><div class="detail-note"><strong>バイトメモ</strong><br><br>${m.note}</div>` : ''}
+        ${m.tags?.length ? `<div class="detail-divider"></div><div style="display:flex;flex-wrap:wrap;gap:7px">${m.tags.map(t => `<span class="flavor-chip">#${t}</span>`).join('')}</div>` : ''}`;
+      document.getElementById('detail-overlay').classList.add('open');
+    }
+
+    /* ===== CLOSE ===== */
+    function closeDetail() { document.getElementById('detail-overlay').classList.remove('open'); }
+    function closeOnBg(e, id) {
+      if (e.target.id !== id) return;
+      if (id === 'diary-modal-overlay') closeDiaryModal();
+      else if (id === 'memo-modal-overlay') closeMemoModal();
+      else if (id === 'detail-overlay') closeDetail();
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { closeDiaryModal(); closeMemoModal(); closeDetail(); }
+    });
+
+    /* ===== RESIZE ===== */
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => { renderDiary(); renderMemo(); }, 180);
+    });
+
+    /* ===== INIT ===== */
+    renderDiary(); renderDiaryStats();
+    renderMemo();  renderMemoStats();
+  </script>
+</body>
+</html>
