@@ -63,7 +63,7 @@
       -webkit-background-clip:text;-webkit-text-fill-color:transparent;
     }
     .logo-icon { font-size:2.2rem;-webkit-text-fill-color:initial; }
-    header p { margin-top:10px;color:var(--text-secondary);font-size:.95rem;font-weight:300;letter-spacing:.04em; }
+    header p { margin-top:10px;color:var(--text-secondary);font-size:.95rem;font-weight:300;letter-spacing:.04em;text-wrap:balance; }
 
     /* TABS */
     .tab-bar {
@@ -78,6 +78,9 @@
     .tab-btn:hover { color:var(--text-primary);background:var(--bg-card); }
     .tab-btn.active { color:#1a1200;background:linear-gradient(135deg,var(--amber-lt),var(--amber));box-shadow:0 4px 20px rgba(212,168,67,.35); }
     .tab-btn.active.memo-tab { background:linear-gradient(135deg,var(--teal-lt),var(--teal));box-shadow:0 4px 20px rgba(63,168,140,.35);color:#001a14; }
+
+    /* BOTTOM NAV (mobile only) */
+    .bottom-nav { display:none; }
 
     /* PANELS */
     .panel { display:none; } .panel.active { display:block; }
@@ -323,6 +326,13 @@
       border-color:var(--border-active);background:rgba(212,168,67,.06);
     }
     input[type=date] { color-scheme:dark; }
+    select.filter-select, select.form-select { color-scheme:dark; }
+    select.filter-select option, select.form-select option {
+      background-color:var(--bg-surface);color:var(--text-primary);
+    }
+    select.filter-select option:checked, select.form-select option:checked {
+      background-color:var(--amber);color:#1a1200;
+    }
     textarea { resize:vertical;min-height:90px;line-height:1.6; }
     .star-input { display:flex;gap:6px; }
     .star-input span { font-size:1.6rem;cursor:pointer;color:var(--text-muted);transition:color .15s; }
@@ -383,8 +393,28 @@
 
     @media (max-width: 700px) {
       .logo-mark { font-size: 2rem; }
-      .tab-bar { gap: 6px; padding: 5px; border-radius: var(--radius-lg); margin-bottom: 26px; }
-      .tab-btn { padding: 11px 10px; font-size: .86rem; border-radius: var(--radius-md); }
+      .tab-bar { display: none; }
+      .app-wrapper { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+      .bottom-nav {
+        display: flex; gap: 8px;
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+        background: rgba(19,22,38,.92);
+        -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -8px 30px rgba(0,0,0,.35);
+      }
+      .bottom-nav-btn {
+        flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+        padding: 8px 6px; border: none; border-radius: var(--radius-md);
+        background: transparent; color: var(--text-secondary);
+        font-family: inherit; font-size: .72rem; font-weight: 500;
+        cursor: pointer; transition: var(--transition);
+      }
+      .bottom-nav-btn .bn-icon { font-size: 1.25rem; line-height: 1; }
+      .bottom-nav-btn.active { color: var(--amber-lt); background: rgba(212,168,67,.12); }
+      .bottom-nav-btn.memo-nav.active { color: var(--teal-lt); background: rgba(63,168,140,.14); }
+      .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
       .toolbar { gap: 8px; }
       .search-box { flex: 1 1 100%; min-width: 0; }
       select.filter-select { flex: 1 1 0; min-width: 0; }
@@ -427,7 +457,7 @@
       .modal-footer .btn-cancel, .modal-footer .btn-save { flex: 1; }
       .toast {
         width: calc(100% - 32px); white-space: normal; text-align: center;
-        bottom: calc(20px + env(safe-area-inset-bottom));
+        bottom: calc(92px + env(safe-area-inset-bottom));
       }
     }
 
@@ -450,8 +480,8 @@
     </header>
 
     <div class="tab-bar" role="tablist">
-      <button class="tab-btn active" id="tab-diary" role="tab" onclick="switchTab('diary')">🥃 飲んだお酒日記</button>
-      <button class="tab-btn memo-tab" id="tab-memo" role="tab" onclick="switchTab('memo')">📚 お酒知識メモ</button>
+      <button class="tab-btn active" id="tab-diary" data-tab="diary" role="tab" aria-selected="true" onclick="switchTab('diary')">🥃 飲んだお酒日記</button>
+      <button class="tab-btn memo-tab" id="tab-memo" data-tab="memo" role="tab" aria-selected="false" onclick="switchTab('memo')">📚 お酒知識メモ</button>
     </div>
 
     <!-- DIARY PANEL -->
@@ -493,6 +523,15 @@
       <div id="memo-shelf"></div>
     </div>
   </div>
+
+  <nav class="bottom-nav" role="tablist" aria-label="画面切り替え">
+    <button class="bottom-nav-btn active" data-tab="diary" role="tab" aria-selected="true" onclick="switchTab('diary')">
+      <span class="bn-icon">🥃</span><span class="bn-label">日記</span>
+    </button>
+    <button class="bottom-nav-btn memo-nav" data-tab="memo" role="tab" aria-selected="false" onclick="switchTab('memo')">
+      <span class="bn-icon">📚</span><span class="bn-label">メモ</span>
+    </button>
+  </nav>
 
   <!-- DIARY MODAL -->
   <div class="modal-overlay" id="diary-modal-overlay" onclick="closeOnBg(event,'diary-modal-overlay')">
@@ -638,7 +677,10 @@
     /* ===== UI HELPERS ===== */
     function switchTab(tab) {
       ['diary','memo'].forEach(t => {
-        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+        document.querySelectorAll('[data-tab="' + t + '"]').forEach(el => {
+          el.classList.toggle('active', t === tab);
+          el.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+        });
         document.getElementById('panel-' + t).classList.toggle('active', t === tab);
       });
     }
